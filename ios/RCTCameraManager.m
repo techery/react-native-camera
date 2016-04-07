@@ -10,6 +10,13 @@
 #import <AVFoundation/AVFoundation.h>
 #import <ImageIO/ImageIO.h>
 #import <UIKit/UIKit.h>
+#import "UIImage+resize.h"
+
+@interface RCTCameraManager () {
+    NSInteger maximumImageSide;
+}
+
+@end
 
 @implementation RCTCameraManager
 
@@ -38,6 +45,8 @@ RCT_EXPORT_VIEW_PROPERTY(flashMode, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(torchMode, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(keepAwake, BOOL);
 RCT_EXPORT_VIEW_PROPERTY(mirrorImage, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(maxWidth, NSInteger);
+RCT_EXPORT_VIEW_PROPERTY(maxHeight, NSInteger);
 
 - (NSDictionary *)constantsToExport
 {
@@ -528,6 +537,9 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
 - (void)saveImage:(NSData*)imageData target:(NSInteger)target metadata:(NSDictionary *)metadata resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
   NSString *responseString;
     UIImage *thisImage = [UIImage imageWithData:imageData];
+    if (maximumImageSide > 0) {
+        thisImage = [UIImage resizeImage:thisImage withMaxSize:maximumImageSide compressForMaxAmountOfBytes: 1000000];
+    }
 
   if (target == RCTCameraCaptureTargetMemory) {
     resolve(@{@"data":[imageData base64EncodedStringWithOptions:0]});
@@ -899,6 +911,14 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
         }
         [self.session commitConfiguration];
     }
+}
+
+- (void)setMaxWidth:(NSInteger)maxWidth {
+    maximumImageSide = maxWidth;
+}
+
+- (void)setMaxHeight:(NSInteger)maxHeight {
+    maximumImageSide = maxHeight;
 }
 
 @end

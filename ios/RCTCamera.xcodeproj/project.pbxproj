@@ -11,6 +11,7 @@
 		4107014D1ACB732B00C6AA39 /* RCTCamera.m in Sources */ = {isa = PBXBuildFile; fileRef = 410701481ACB732B00C6AA39 /* RCTCamera.m */; };
 		4107014E1ACB732B00C6AA39 /* RCTCameraManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 4107014A1ACB732B00C6AA39 /* RCTCameraManager.m */; };
 		454EBCF41B5082DC00AD0F86 /* NSMutableDictionary+ImageMetadata.m in Sources */ = {isa = PBXBuildFile; fileRef = 454EBCF31B5082DC00AD0F86 /* NSMutableDictionary+ImageMetadata.m */; };
+		C2EE833B1CB6638600907572 /* UIImage+resize.m in Sources */ = {isa = PBXBuildFile; fileRef = C2EE833A1CB6638600907572 /* UIImage+resize.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,8 @@
 		410701491ACB732B00C6AA39 /* RCTCameraManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RCTCameraManager.h; sourceTree = "<group>"; };
 		4107014A1ACB732B00C6AA39 /* RCTCameraManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RCTCameraManager.m; sourceTree = "<group>"; };
 		454EBCF31B5082DC00AD0F86 /* NSMutableDictionary+ImageMetadata.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableDictionary+ImageMetadata.m"; sourceTree = "<group>"; };
+		C2EE83391CB6638600907572 /* UIImage+resize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+resize.h"; sourceTree = "<group>"; };
+		C2EE833A1CB6638600907572 /* UIImage+resize.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+resize.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,6 +53,8 @@
 		410701241ACB719800C6AA39 = {
 			isa = PBXGroup;
 			children = (
+				C2EE83391CB6638600907572 /* UIImage+resize.h */,
+				C2EE833A1CB6638600907572 /* UIImage+resize.m */,
 				0314E39C1B661A460092D183 /* CameraFocusSquare.m */,
 				0314E39B1B661A0C0092D183 /* CameraFocusSquare.h */,
 				454EBCF31B5082DC00AD0F86 /* NSMutableDictionary+ImageMetadata.m */,
@@ -128,6 +133,7 @@
 				454EBCF41B5082DC00AD0F86 /* NSMutableDictionary+ImageMetadata.m in Sources */,
 				4107014E1ACB732B00C6AA39 /* RCTCameraManager.m in Sources */,
 				4107014D1ACB732B00C6AA39 /* RCTCamera.m in Sources */,
+				C2EE833B1CB6638600907572 /* UIImage+resize.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

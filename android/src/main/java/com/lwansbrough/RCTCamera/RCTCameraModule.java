@@ -12,15 +12,26 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import com.facebook.react.bridge.*;
 
-import javax.annotation.Nullable;
-import java.io.*;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nullable;
 
 public class RCTCameraModule extends ReactContextBaseJavaModule {
     private static final String TAG = "RCTCameraModule";
@@ -173,11 +184,16 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
             public void onPictureTaken(byte[] data, Camera camera) {
                 camera.stopPreview();
                 camera.startPreview();
-                Map<String, Object> response = new HashMap();
+                final Camera.Size pictureSize = camera.getParameters().getPictureSize();
+
+                WritableMap response = Arguments.createMap();
+                response.putInt("width", pictureSize.width);
+                response.putInt("height", pictureSize.height);
+
                 switch (options.getInt("target")) {
                     case RCT_CAMERA_CAPTURE_TARGET_MEMORY:
                         String encoded = Base64.encodeToString(data, Base64.DEFAULT);
-                        response.put("data", encoded);
+                        response.putString("data", encoded);
                         promise.resolve(response);
                         break;
                     case RCT_CAMERA_CAPTURE_TARGET_CAMERA_ROLL:
@@ -187,7 +203,8 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                                 _reactContext.getContentResolver(),
                                 bitmap, options.getString("title"),
                                 options.getString("description"));
-                        response.put("path", url);
+
+                        response.putString("uri", url);
                         promise.resolve(response);
                         break;
                     case RCT_CAMERA_CAPTURE_TARGET_DISK:
@@ -206,7 +223,8 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         } catch (IOException e) {
                             promise.reject("Error accessing file: " + e.getMessage());
                         }
-                        promise.resolve(Uri.fromFile(pictureFile).toString());
+                        response.putString("uri", Uri.fromFile(pictureFile).toString());
+                        promise.resolve(response);
                         break;
                     case RCT_CAMERA_CAPTURE_TARGET_TEMP:
                         File tempFile = getTempMediaFile(MEDIA_TYPE_IMAGE);
@@ -225,7 +243,8 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         } catch (IOException e) {
                             promise.reject("Error accessing file: " + e.getMessage());
                         }
-                        promise.resolve(Uri.fromFile(tempFile).toString());
+                        response.putString("uri", Uri.fromFile(tempFile).toString());
+                        promise.resolve(response);
                         break;
                 }
             }

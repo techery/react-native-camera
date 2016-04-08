@@ -2,6 +2,7 @@ import React, {
   Component,
   NativeAppEventEmitter,
   NativeModules,
+  Platform,
   PropTypes,
   StyleSheet,
   requireNativeComponent,
@@ -78,13 +79,13 @@ export default class Camera extends Component {
       PropTypes.string,
       PropTypes.number
     ]),
-    maxWidth: PropTypes.number,
-    maxHeight: PropTypes.number,
     keepAwake: PropTypes.bool,
     onBarCodeRead: PropTypes.func,
     onFocusChanged: PropTypes.func,
     onZoomChanged: PropTypes.func,
     mirrorImage: PropTypes.bool,
+    maxHeight: PropTypes.number.isRequired,
+    maxWidth: PropTypes.number.isRequired,
     orientation: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number
@@ -111,11 +112,11 @@ export default class Camera extends Component {
     flashMode: CameraManager.FlashMode.off,
     torchMode: CameraManager.TorchMode.off,
     mirrorImage: false,
-    maxWidth: 2048,
-    maxHeight: 2048
   };
 
   static checkDeviceAuthorizationStatus = CameraManager.checkDeviceAuthorizationStatus;
+  static checkVideoAuthorizationStatus = CameraManager.checkVideoAuthorizationStatus;
+  static checkAudioAuthorizationStatus = CameraManager.checkAudioAuthorizationStatus;
 
   setNativeProps(props) {
     this.refs[CAMERA_REF].setNativeProps(props);
@@ -132,8 +133,10 @@ export default class Camera extends Component {
   async componentWillMount() {
     this.cameraBarCodeReadListener = NativeAppEventEmitter.addListener('CameraBarCodeRead', this.props.onBarCodeRead);
 
-    if (Camera.checkDeviceAuthorizationStatus) {
-      const isAuthorized = await Camera.checkDeviceAuthorizationStatus();
+    let check = this.props.captureAudio ? Camera.checkDeviceAuthorizationStatus : Camera.checkVideoAuthorizationStatus;
+
+    if (check) {
+      const isAuthorized = await check();
       this.setState({ isAuthorized });
     }
   }
@@ -187,6 +190,12 @@ export default class Camera extends Component {
   }
 
   hasFlash() {
+    if (Platform.OS === 'android') {
+      const props = convertStringProps(this.props);
+      return CameraManager.hasFlash({
+        type: props.type
+      });
+    }
     return CameraManager.hasFlash();
   }
 }

@@ -10,4 +10,6 @@
 
 @interface UIImage (resize)
 
++ (UIImage *)resizeImage:(UIImage *)image withMaxSize:(CGSize)maxSize compressForMaxAmountOfBytes:(NSUInteger)maxAmountOfBytes;
+
 @end

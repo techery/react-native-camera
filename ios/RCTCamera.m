@@ -228,5 +228,17 @@
     }
 }
 
+- (void)setMaxWidth:(NSInteger)maxWidth {
+    if (self.manager) {
+        self.manager.maxSideSize = maxWidth;
+    }
+}
+
+- (void)setMaxHeight:(NSInteger)maxHeight {
+    if (self.manager) {
+        self.manager.maxSideSize = maxHeight;
+    }
+}
+
 
 @end

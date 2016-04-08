@@ -12,10 +12,7 @@
 #import <UIKit/UIKit.h>
 #import "UIImage+resize.h"
 
-@interface RCTCameraManager () {
-    NSInteger maximumImageSide;
-}
-
+@interface RCTCameraManager ()
 @end
 
 @implementation RCTCameraManager
@@ -538,9 +535,9 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
     NSString *responseString;
     UIImage *thisImage = [UIImage imageWithData:imageData];
     NSData *imgData = imageData;
-    if (maximumImageSide > 0) {
+    if (self.maxSideSize > 0) {
         thisImage = [UIImage resizeImage:thisImage
-                             withMaxSize:CGSizeMake(maximumImageSide, maximumImageSide)
+                             withMaxSize:CGSizeMake(self.maxSideSize, self.maxSideSize)
              compressForMaxAmountOfBytes:1000000];
         imgData = UIImageJPEGRepresentation(thisImage, 1.0);
     }
@@ -915,14 +912,6 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
         }
         [self.session commitConfiguration];
     }
-}
-
-- (void)setMaxWidth:(NSInteger)maxWidth {
-    maximumImageSide = maxWidth;
-}
-
-- (void)setMaxHeight:(NSInteger)maxHeight {
-    maximumImageSide = maxHeight;
 }
 
 @end

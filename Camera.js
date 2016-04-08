@@ -78,6 +78,8 @@ export default class Camera extends Component {
       PropTypes.string,
       PropTypes.number
     ]),
+    maxWidth: PropTypes.number.
+    maxHeight: PropTypes.number,
     keepAwake: PropTypes.bool,
     onBarCodeRead: PropTypes.func,
     onFocusChanged: PropTypes.func,
@@ -109,6 +111,8 @@ export default class Camera extends Component {
     flashMode: CameraManager.FlashMode.off,
     torchMode: CameraManager.TorchMode.off,
     mirrorImage: false,
+    maxWidth: 2048,
+    maxHeight: 2048
   };
 
   static checkDeviceAuthorizationStatus = CameraManager.checkDeviceAuthorizationStatus;

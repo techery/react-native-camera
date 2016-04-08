@@ -563,7 +563,7 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
         NSString *fullPath = [NSString stringWithFormat:@"%@%@.jpg", NSTemporaryDirectory(), fileName];
         
         [imgData writeToFile:fullPath atomically:YES];
-        responseString = fullPath;
+        responseString = [NSURL fileURLWithPath:fullPath].absoluteString;
     }
     
     else if (target == RCTCameraCaptureTargetCameraRoll) {

@@ -78,7 +78,7 @@ export default class Camera extends Component {
       PropTypes.string,
       PropTypes.number
     ]),
-    maxWidth: PropTypes.number.
+    maxWidth: PropTypes.number,
     maxHeight: PropTypes.number,
     keepAwake: PropTypes.bool,
     onBarCodeRead: PropTypes.func,

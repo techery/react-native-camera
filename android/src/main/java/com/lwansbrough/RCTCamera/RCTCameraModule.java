@@ -14,6 +14,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -194,7 +195,7 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
                 RCTCamera reactCameraInstance = RCTCamera.getInstance();
-                
+
                 camera.stopPreview();
                 camera.startPreview();
                 final Camera.Size pictureSize = camera.getParameters().getPictureSize();
@@ -202,7 +203,7 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                 WritableMap response = Arguments.createMap();
                 final int width = pictureSize.width;
                 final int height = pictureSize.height;
-                
+
                 response.putInt("width", width);
                 response.putInt("height", height);
 
@@ -259,14 +260,16 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         } catch (IOException e) {
                             promise.reject("Error accessing file: " + e.getMessage());
                         }
-                        
+
                         final int maxWidth = reactCameraInstance.getMaxWidth();
                         final int maxHeight = reactCameraInstance.getMaxHeight();
 
-                        File resizedPhotoFile = getResizedImage(tempFile.getAbsolutePath(),
+                        Pair<File, Pair<Integer, Integer>> resizedResult = getResizedImage(tempFile.getAbsolutePath(),
                                 width, height, maxWidth, maxHeight);
 
-                        response.putString("uri", Uri.fromFile(resizedPhotoFile).toString());
+                        response.putInt("width", resizedResult.second.first);
+                        response.putInt("height", resizedResult.second.second);
+                        response.putString("uri", Uri.fromFile(resizedResult.first).toString());
                         promise.resolve(response);
                         break;
                 }
@@ -329,9 +332,9 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
         }
     }
 
-        private File getResizedImage(final String realPath,
-                                 final int initialWidth, final int initialHeight,
-                                 int maxWidth, int maxHeight) {
+    private Pair<File, Pair<Integer, Integer>> getResizedImage(final String realPath,
+                                                               final int initialWidth, final int initialHeight,
+                                                               int maxWidth, int maxHeight) {
         Bitmap photo = BitmapFactory.decodeFile(realPath);
 
         if (photo == null) {
@@ -352,7 +355,7 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
 
         Matrix matrix = new Matrix();
         matrix.postScale(ratio, ratio);
-        matrix.postRotate(getOrientationRotateFromExif(realPath));  
+        matrix.postRotate(getOrientationRotateFromExif(realPath));
 
         scaledPhoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -373,10 +376,10 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
 
         scaledPhoto.recycle();
         photo.recycle();
-        return file;
+        return new Pair<>(file, new Pair<>(scaledPhoto.getWidth(), scaledPhoto.getHeight()));
     }
 
-     private float getOrientationRotateFromExif(String realPath) {
+    private float getOrientationRotateFromExif(String realPath) {
         ExifInterface exif;
         try {
             exif = new ExifInterface(realPath);

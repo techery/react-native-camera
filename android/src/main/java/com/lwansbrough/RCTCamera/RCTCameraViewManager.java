@@ -61,4 +61,14 @@ public class RCTCameraViewManager extends ViewGroupManager<RCTCameraView> {
     public void setCaptureAudio(RCTCameraView view, boolean captureAudio) {
         // TODO - implement video mode
     }
+
+    @ReactProp(name = "maxWidth")
+    public void setMaxWidth(RCTCameraView view, int maxWidth) {
+        RCTCamera.getInstance().setMaxWidth(maxWidth);
+    }
+
+    @ReactProp(name = "maxHeight")
+    public void setMaxHeight(RCTCameraView view, int maxHeight) {
+        RCTCamera.getInstance().setMaxHeihgt(maxHeight);
+    }
 }

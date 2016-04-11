@@ -69,6 +69,6 @@ public class RCTCameraViewManager extends ViewGroupManager<RCTCameraView> {
 
     @ReactProp(name = "maxHeight")
     public void setMaxHeight(RCTCameraView view, int maxHeight) {
-        RCTCamera.getInstance().setMaxHeihgt(maxHeight);
+        RCTCamera.getInstance().setMaxHeight(maxHeight);
     }
 }

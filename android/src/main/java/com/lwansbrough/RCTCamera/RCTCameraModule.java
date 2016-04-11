@@ -6,7 +6,9 @@ package com.lwansbrough.RCTCamera;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -21,6 +23,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -190,13 +193,18 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
         camera.takePicture(null, null, new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
+                RCTCamera reactCameraInstance = RCTCamera.getInstance();
+                
                 camera.stopPreview();
                 camera.startPreview();
                 final Camera.Size pictureSize = camera.getParameters().getPictureSize();
 
                 WritableMap response = Arguments.createMap();
-                response.putInt("width", pictureSize.width);
-                response.putInt("height", pictureSize.height);
+                final int width = pictureSize.width;
+                final int height = pictureSize.height;
+                
+                response.putInt("width", width);
+                response.putInt("height", height);
 
                 switch (options.getInt("target")) {
                     case RCT_CAMERA_CAPTURE_TARGET_MEMORY:
@@ -251,7 +259,14 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         } catch (IOException e) {
                             promise.reject("Error accessing file: " + e.getMessage());
                         }
-                        response.putString("uri", Uri.fromFile(tempFile).toString());
+                        
+                        final int maxWidth = reactCameraInstance.getMaxWidth();
+                        final int maxHeight = reactCameraInstance.getMaxHeight();
+
+                        File resizedPhotoFile = getResizedImage(tempFile.getAbsolutePath(),
+                                width, height, maxWidth, maxHeight);
+
+                        response.putString("uri", Uri.fromFile(resizedPhotoFile).toString());
                         promise.resolve(response);
                         break;
                 }
@@ -312,5 +327,74 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
             Log.e(TAG, e.getMessage());
             return null;
         }
+    }
+
+        private File getResizedImage(final String realPath,
+                                 final int initialWidth, final int initialHeight,
+                                 int maxWidth, int maxHeight) {
+        Bitmap photo = BitmapFactory.decodeFile(realPath);
+
+        if (photo == null) {
+            return null;
+        }
+
+        Bitmap scaledPhoto;
+        if (maxWidth == 0) {
+            maxWidth = initialWidth;
+        }
+        if (maxHeight == 0) {
+            maxHeight = initialHeight;
+        }
+        float widthRatio = (float) maxWidth / initialWidth;
+        float heightRatio = (float) maxHeight / initialHeight;
+
+        float ratio = (widthRatio < heightRatio) ? widthRatio : heightRatio;
+
+        Matrix matrix = new Matrix();
+        matrix.postScale(ratio, ratio);
+        matrix.postRotate(getOrientationRotateFromExif(realPath));  
+
+        scaledPhoto = Bitmap.createBitmap(photo, 0, 0, photo.getWidth(), photo.getHeight(), matrix, true);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        scaledPhoto.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+
+        File file = getTempMediaFile(MEDIA_TYPE_IMAGE);
+        FileOutputStream fileOutputStream;
+        try {
+            fileOutputStream = new FileOutputStream(file);
+            try {
+                fileOutputStream.write(bytes.toByteArray());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        scaledPhoto.recycle();
+        photo.recycle();
+        return file;
+    }
+
+     private float getOrientationRotateFromExif(String realPath) {
+        ExifInterface exif;
+        try {
+            exif = new ExifInterface(realPath);
+
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    return 90f;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    return 180f;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    return 270f;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0f;
+        }
+        return 0f;
     }
 }

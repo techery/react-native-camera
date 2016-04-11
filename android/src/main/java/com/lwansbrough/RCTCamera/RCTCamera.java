@@ -18,6 +18,8 @@ public class RCTCamera {
     private final Map<Number, Camera> _cameras;
     private int _orientation = -1;
     private int _actualDeviceOrientation = 0;
+    private int maxWidth;
+    private int maxHeight;
 
     public static RCTCamera getInstance() {
         return ourInstance;
@@ -28,6 +30,7 @@ public class RCTCamera {
             try {
                 Camera camera = Camera.open(_cameraTypeToIndex.get(type));
                 _cameras.put(type, camera);
+                camera.startPreview();
                 adjustPreviewLayout(type);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -35,6 +38,22 @@ public class RCTCamera {
             }
         }
         return _cameras.get(type);
+    }
+
+    public int getMaxWidth() {
+        return maxWidth;
+    }
+
+    public void setMaxWidth(int maxWidth) {
+        this.maxWidth = maxWidth;
+    }
+
+    public int getMaxHeight() {
+        return maxHeight;
+    }
+
+    public void setMaxHeight(int maxHeight) {
+        this.maxHeight = maxHeight;
     }
 
     public void releaseCameraInstance(int type) {

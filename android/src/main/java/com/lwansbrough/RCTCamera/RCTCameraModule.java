@@ -264,11 +264,11 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         final int maxWidth = reactCameraInstance.getMaxWidth();
                         final int maxHeight = reactCameraInstance.getMaxHeight();
 
-                        Pair<File, Pair<Integer, Integer>> resizedResult = getResizedImage(tempFile.getAbsolutePath(),
+                        Pair<File, PictureSize> resizedResult = getResizedImage(tempFile.getAbsolutePath(),
                                 width, height, maxWidth, maxHeight);
 
-                        response.putInt("width", resizedResult.second.first);
-                        response.putInt("height", resizedResult.second.second);
+                        response.putInt("width", resizedResult.second.getWidth());
+                        response.putInt("height", resizedResult.second.getHeight());
                         response.putString("uri", Uri.fromFile(resizedResult.first).toString());
                         promise.resolve(response);
                         break;
@@ -332,9 +332,9 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
         }
     }
 
-    private Pair<File, Pair<Integer, Integer>> getResizedImage(final String realPath,
-                                                               final int initialWidth, final int initialHeight,
-                                                               int maxWidth, int maxHeight) {
+    private Pair<File, PictureSize> getResizedImage(final String realPath,
+                                                    final int initialWidth, final int initialHeight,
+                                                    int maxWidth, int maxHeight) {
         Bitmap photo = BitmapFactory.decodeFile(realPath);
 
         if (photo == null) {
@@ -376,7 +376,8 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
 
         scaledPhoto.recycle();
         photo.recycle();
-        return new Pair<>(file, new Pair<>(scaledPhoto.getWidth(), scaledPhoto.getHeight()));
+
+        return new Pair<>(file, new PictureSize(scaledPhoto.getWidth(), scaledPhoto.getHeight()));
     }
 
     private float getOrientationRotateFromExif(String realPath) {
@@ -399,5 +400,31 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
             return 0f;
         }
         return 0f;
+    }
+
+    public static class PictureSize {
+        private int width;
+        private int height;
+
+        public PictureSize(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        public int getWidth() {
+            return width;
+        }
+
+        public void setWidth(int width) {
+            this.width = width;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public void setHeight(int height) {
+            this.height = height;
+        }
     }
 }

@@ -197,7 +197,6 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                 RCTCamera reactCameraInstance = RCTCamera.getInstance();
 
                 camera.stopPreview();
-                camera.startPreview();
                 final Camera.Size pictureSize = camera.getParameters().getPictureSize();
 
                 WritableMap response = Arguments.createMap();
@@ -273,6 +272,8 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                         promise.resolve(response);
                         break;
                 }
+
+                camera.startPreview();
             }
         });
     }

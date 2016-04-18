@@ -11,6 +11,9 @@ import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -65,7 +68,29 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
 
+    public static final int WHAT_STOP_CAMERA = 0;
+    public static final int WHAT_START_CAMERA = 1;
+
     private final ReactApplicationContext _reactContext;
+
+    private Handler mainHandler = new Handler(Looper.getMainLooper(), new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
+                case WHAT_STOP_CAMERA: {
+                    Camera camera = (Camera) msg.obj;
+                    camera.stopPreview();
+                    return true;
+                }
+                case WHAT_START_CAMERA: {
+                    Camera camera = (Camera) msg.obj;
+                    camera.startPreview();
+                    return true;
+                }
+            }
+            return false;
+        }
+    });
 
     public RCTCameraModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -193,89 +218,110 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
         RCTCamera.getInstance().setCaptureQuality(options.getInt("type"), options.getString("quality"));
         camera.takePicture(null, null, new Camera.PictureCallback() {
             @Override
-            public void onPictureTaken(byte[] data, Camera camera) {
-                RCTCamera reactCameraInstance = RCTCamera.getInstance();
-
-                camera.stopPreview();
-                final Camera.Size pictureSize = camera.getParameters().getPictureSize();
-
-                WritableMap response = Arguments.createMap();
-                final int width = pictureSize.width;
-                final int height = pictureSize.height;
-
-                response.putInt("width", width);
-                response.putInt("height", height);
-
-                switch (options.getInt("target")) {
-                    case RCT_CAMERA_CAPTURE_TARGET_MEMORY:
-                        String encoded = Base64.encodeToString(data, Base64.DEFAULT);
-                        response.putString("data", encoded);
-                        promise.resolve(response);
-                        break;
-                    case RCT_CAMERA_CAPTURE_TARGET_CAMERA_ROLL:
-                        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, bitmapOptions);
-                        String url = MediaStore.Images.Media.insertImage(
-                                _reactContext.getContentResolver(),
-                                bitmap, options.getString("title"),
-                                options.getString("description"));
-
-                        response.putString("uri", url);
-                        promise.resolve(response);
-                        break;
-                    case RCT_CAMERA_CAPTURE_TARGET_DISK:
-                        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                        if (pictureFile == null) {
-                            promise.reject("Error creating media file.");
-                            return;
-                        }
+            public void onPictureTaken(final byte[] data, final Camera camera) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mainHandler.sendMessage(buildCameraMessage(WHAT_STOP_CAMERA, camera));
 
                         try {
-                            FileOutputStream fos = new FileOutputStream(pictureFile);
-                            fos.write(data);
-                            fos.close();
-                        } catch (FileNotFoundException e) {
-                            promise.reject("File not found: " + e.getMessage());
-                        } catch (IOException e) {
-                            promise.reject("Error accessing file: " + e.getMessage());
-                        }
-                        response.putString("uri", Uri.fromFile(pictureFile).toString());
-                        promise.resolve(response);
-                        break;
-                    case RCT_CAMERA_CAPTURE_TARGET_TEMP:
-                        File tempFile = getTempMediaFile(MEDIA_TYPE_IMAGE);
-
-                        if (tempFile == null) {
-                            promise.reject("Error creating media file.");
-                            return;
+                            handlePictureTakenResult(data, options, camera, promise);
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
 
-                        try {
-                            FileOutputStream fos = new FileOutputStream(tempFile);
-                            fos.write(data);
-                            fos.close();
-                        } catch (FileNotFoundException e) {
-                            promise.reject("File not found: " + e.getMessage());
-                        } catch (IOException e) {
-                            promise.reject("Error accessing file: " + e.getMessage());
-                        }
-
-                        final int maxWidth = reactCameraInstance.getMaxWidth();
-                        final int maxHeight = reactCameraInstance.getMaxHeight();
-
-                        Pair<File, PictureSize> resizedResult = getResizedImage(tempFile.getAbsolutePath(),
-                                width, height, maxWidth, maxHeight);
-
-                        response.putInt("width", resizedResult.second.getWidth());
-                        response.putInt("height", resizedResult.second.getHeight());
-                        response.putString("uri", Uri.fromFile(resizedResult.first).toString());
-                        promise.resolve(response);
-                        break;
-                }
-
-                camera.startPreview();
+                        final int screenTransitionDelayMillis = 300;
+                        mainHandler.sendMessageDelayed(buildCameraMessage(WHAT_START_CAMERA, camera), screenTransitionDelayMillis);
+                    }
+                }).start();
             }
         });
+    }
+
+    private Message buildCameraMessage(int what, Camera camera) {
+        Message message = new Message();
+        message.what = what;
+        message.obj = camera;
+        return message;
+    }
+
+    private void handlePictureTakenResult(byte[] data, ReadableMap options, Camera camera, Promise promise) {
+        final Camera.Size pictureSize = camera.getParameters().getPictureSize();
+
+        WritableMap response = Arguments.createMap();
+        final int width = pictureSize.width;
+        final int height = pictureSize.height;
+
+        response.putInt("width", width);
+        response.putInt("height", height);
+
+        switch (options.getInt("target")) {
+            case RCT_CAMERA_CAPTURE_TARGET_MEMORY:
+                String encoded = Base64.encodeToString(data, Base64.DEFAULT);
+                response.putString("data", encoded);
+                promise.resolve(response);
+                break;
+            case RCT_CAMERA_CAPTURE_TARGET_CAMERA_ROLL:
+                BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, bitmapOptions);
+                String url = MediaStore.Images.Media.insertImage(
+                        _reactContext.getContentResolver(),
+                        bitmap, options.getString("title"),
+                        options.getString("description"));
+
+                response.putString("uri", url);
+                promise.resolve(response);
+                break;
+            case RCT_CAMERA_CAPTURE_TARGET_DISK:
+                File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+                if (pictureFile == null) {
+                    promise.reject("Error creating media file.");
+                    return;
+                }
+
+                try {
+                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    fos.write(data);
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    promise.reject("File not found: " + e.getMessage());
+                } catch (IOException e) {
+                    promise.reject("Error accessing file: " + e.getMessage());
+                }
+                response.putString("uri", Uri.fromFile(pictureFile).toString());
+                promise.resolve(response);
+                break;
+            case RCT_CAMERA_CAPTURE_TARGET_TEMP:
+                File tempFile = getTempMediaFile(MEDIA_TYPE_IMAGE);
+
+                if (tempFile == null) {
+                    promise.reject("Error creating media file.");
+                    return;
+                }
+
+                try {
+                    FileOutputStream fos = new FileOutputStream(tempFile);
+                    fos.write(data);
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    promise.reject("File not found: " + e.getMessage());
+                } catch (IOException e) {
+                    promise.reject("Error accessing file: " + e.getMessage());
+                }
+                RCTCamera reactCameraInstance = RCTCamera.getInstance();
+
+                final int maxWidth = reactCameraInstance.getMaxWidth();
+                final int maxHeight = reactCameraInstance.getMaxHeight();
+
+                Pair<File, PictureSize> resizedResult = getResizedImage(tempFile.getAbsolutePath(),
+                        width, height, maxWidth, maxHeight);
+
+                response.putInt("width", resizedResult.second.getWidth());
+                response.putInt("height", resizedResult.second.getHeight());
+                response.putString("uri", Uri.fromFile(resizedResult.first).toString());
+                promise.resolve(response);
+                break;
+        }
     }
 
     @ReactMethod

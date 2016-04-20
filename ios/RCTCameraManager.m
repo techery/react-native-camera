@@ -326,6 +326,10 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if (authStatus != AVAuthorizationStatusAuthorized) {
+        return;
+    }
     dispatch_async(self.sessionQueue, ^{
         if (self.presetCamera == AVCaptureDevicePositionUnspecified) {
             self.presetCamera = AVCaptureDevicePositionBack;
@@ -372,6 +376,10 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if (authStatus != AVAuthorizationStatusAuthorized) {
+        return;
+    }
     dispatch_async(self.sessionQueue, ^{
         [self.previewLayer removeFromSuperlayer];
         [self.session stopRunning];

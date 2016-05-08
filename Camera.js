@@ -1,13 +1,5 @@
-import React, {
-  Component,
-  NativeAppEventEmitter,
-  NativeModules,
-  Platform,
-  PropTypes,
-  StyleSheet,
-  requireNativeComponent,
-  View,
-} from 'react-native';
+import {Component, PropTypes} from 'react';
+import {NativeAppEventEmitter, NativeModules, Platform, StyleSheet, requireNativeComponent, View} from 'react-native';
 
 const CameraManager = NativeModules.CameraManager || NativeModules.CameraModule;
 const CAMERA_REF = 'camera';

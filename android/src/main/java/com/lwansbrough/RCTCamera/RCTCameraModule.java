@@ -83,8 +83,12 @@ public class RCTCameraModule extends ReactContextBaseJavaModule {
                     return true;
                 }
                 case WHAT_START_CAMERA: {
-                    Camera camera = (Camera) msg.obj;
-                    camera.startPreview();
+                    try {
+                        Camera camera = (Camera) msg.obj;
+                        camera.startPreview();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     return true;
                 }
             }

@@ -507,8 +507,12 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
                 // Erase stupid TIFF stuff
                 [imageMetadata removeObjectForKey:(NSString *)kCGImagePropertyTIFFDictionary];
 
+                NSDictionary *jfifProperties = @{(id) kCGImagePropertyJFIFIsProgressive: (__bridge id) kCFBooleanTrue};
+                imageMetadata[(id) kCGImagePropertyJFIFDictionary] = jfifProperties;
+                imageMetadata[(id) kCGImageDestinationLossyCompressionQuality] = @1.0;
+
                 // Add input metadata
-                [imageMetadata mergeMetadata:[options objectForKey:@"metadata"]];
+                [imageMetadata mergeMetadata:options[@"metadata"]];
 
                 // Create destination thing
                 NSMutableData *rotatedImageData = [NSMutableData data];
@@ -537,12 +541,6 @@ RCT_EXPORT_METHOD(hasFlash:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRej
     NSString *responseString;
     UIImage *thisImage = [UIImage imageWithData:imageData];
     NSData *imgData = imageData;
-    if (self.maxSideSize > 0) {
-        thisImage = [UIImage resizeImage:thisImage
-                             withMaxSize:CGSizeMake(self.maxSideSize, self.maxSideSize)
-             compressForMaxAmountOfBytes:1000000];
-        imgData = UIImageJPEGRepresentation(thisImage, 1.0);
-    }
 
     if (target == RCTCameraCaptureTargetMemory) {
         resolve(@{@"data":[imgData base64EncodedStringWithOptions:0]});

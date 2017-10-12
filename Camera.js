@@ -1,4 +1,5 @@
-import React, {Component, PropTypes} from 'react';
+import React, {Component} from 'react';
+import PropTypes from 'prop-types'
 import {NativeAppEventEmitter, NativeModules, Platform, StyleSheet, requireNativeComponent, View} from 'react-native';
 
 const CameraManager = NativeModules.CameraManager || NativeModules.CameraModule;

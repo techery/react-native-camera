@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types'
-import {NativeAppEventEmitter, NativeModules, Platform, StyleSheet, requireNativeComponent, View} from 'react-native';
+import {NativeAppEventEmitter, NativeModules, Platform, StyleSheet, requireNativeComponent, ViewPropTypes} from 'react-native';
 
 const CameraManager = NativeModules.CameraManager || NativeModules.CameraModule;
 const CAMERA_REF = 'camera';
@@ -49,7 +49,7 @@ export default class Camera extends Component {
   };
 
   static propTypes = {
-    ...View.propTypes,
+    ...ViewPropTypes,
     aspect: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number
